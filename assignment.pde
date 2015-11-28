@@ -1,10 +1,12 @@
-//Scale some shitty pie charts. Create the bar chart
+
 ArrayList<Year> years = new ArrayList<Year>();
 int which = 0;
+float zeroX, zeroY;
 float centX, centY;
 float highest, border;
 String[] company;
 color[] companyColour; 
+
 PFont font;
 
 void setup()
@@ -15,6 +17,8 @@ void setup()
   background(0);
   smooth();
 
+  zeroX = 0;
+  zeroY = 0;
 
   loadData();
   displayFigures();
@@ -68,7 +72,8 @@ void draw()
   {
     drawAxis(years.size(), 10, maxGoogle(), border);
     drawTrendGraph(border, maxGoogle());
-
+    redLine(x);
+    drawCircle(x);
   } else if (which == 1)
   {
     pushMatrix();
@@ -91,14 +96,55 @@ void draw()
     drawBarChart();
   } else if (which == 3)
   {
+    drawAxis(years.size(), 10, maxGoogle(), border);
+    scatterGraph();
+  }
+  if (which == 4)
+  {
     pushMatrix();
     translate(width * 0.25f, 0);
     drawTotalPieChart();
     popMatrix();
-   
   }
-  
 }//end draw
+
+
+void scatterGraph()
+{
+
+  stroke(0, 0, 255);
+  fill(0, 0, 255);
+
+  for (int i = 0; i < years.size (); i ++)
+  {
+    Year value = years.get(i);
+    float size = 100;
+    float sizeGoogle = map(value.google, 0, maxValueOfThree(), 0, size);
+    float sizeApple = map(value.apple, 0, maxValueOfThree(), 0, size);;
+    float sizeMicrosoft = map(value.microsoft, 0, maxValueOfThree(), 0, size);;
+
+    stroke(companyColour[0]);
+    fill(companyColour[0]);
+    float x = map(i, 0, years.size(), border, width - border);
+    float y = map(value.google, 0, maxGoogle(), height - border, border);
+
+    ellipse((float)x, y, sizeGoogle, sizeGoogle);
+
+    x = map(i, 0, years.size(), border, width - border);
+    y = map(value.apple, 0, maxGoogle(), height - border, border);
+
+    stroke(companyColour[1]);
+    fill(companyColour[1]);
+    ellipse((float)x, y, sizeApple, sizeApple);
+
+    x = map(i, 0, years.size(), border, width - border);
+    y = map(value.microsoft, 0, maxGoogle(), height - border, border);
+
+    stroke(companyColour[2]);
+    fill(companyColour[2]);
+    ellipse((float)x, y, sizeMicrosoft, sizeMicrosoft);
+  }
+}
 
 void drawBarChart()
 {
@@ -116,6 +162,21 @@ void drawBarChart()
     float barWidth = sizeEachBar;
     float barHeight = map(value.google, 0, maxGoogle(), height - border, border);
     rect((float)x, y, barWidth, barHeight);
+  }
+}
+
+void redLine(int x)
+{
+  if (x > border && x < width - (border * 2)) 
+  {
+
+    line(x, border, x, height - border);
+  } else if (x > width - (border * 2)) {
+
+    line(width - (border*2), border, width - (border*2), height - border);
+  } else if (x < border) {
+
+    line(border, border, border, height - border);
   }
 }
 
@@ -141,7 +202,6 @@ void drawTotalPieChart()
   
 
   float sum = sumGoogle() + sumApple() + sumMicrosoft();
-  //float max = maxValueOfThree();
   float thetaPrev = 0;
   float totalThree = total[0] + total[1] + total[2];
 
@@ -149,15 +209,13 @@ void drawTotalPieChart()
   {
    
     float mapX = map(total[i], 0, highestTotal, 0, centX);
-    float mapY = map(total[i], 0, highestTotal, 0, centY);
-    //Year year = years.get(i); 
+    float mapY = map(total[i], 0, highestTotal, 0, centY); 
     fill(companyColour[i]);
     stroke(companyColour[i]);
 
     float theta = map(total[i], 0, sum, 0, TWO_PI);
     textAlign(CENTER);
     textSize(15);
-    //float col = map(total[i], 0, max, 255, 100);
     float thetaNext = thetaPrev + theta;
     float radius = newX * 0.6f;
     //float radius = centX * 2.0f;
@@ -168,16 +226,81 @@ void drawTotalPieChart()
     text(company[i] + ": " + (int)map(total[i], 0, sum, 0, 100) + "%", x, y);             
     stroke(companyColour[i]);
     fill(companyColour[i]);               
-    arc(newX, newY, centX, centY, thetaPrev, thetaNext);
+    arc(newX, newY, mapX, mapY, thetaPrev, thetaNext);
     thetaPrev = thetaNext;
   }
 }
+
+void drawCircle(int x)
+{
+  float textX = width - (border * 2);
+  float y = border;
+  //only executes if x is within borders of graph
+  if (x > border && x < width - (border * 2)) {
+    int num = (int)map(x, border, width - border, 0, years.size());
+    float mapX = map(x, 0, years.size(), border, height - border);
+
+    Year year = years.get(num);
+
+    float googleY = map(year.google, 0, maxValueOfThree(), height - border, border);
+    float appleY = map(year.apple, 0, maxValueOfThree(), height - border, border);
+    float microsoftY = map(year.microsoft, 0, maxValueOfThree(), height - border, border);
+
+    stroke(companyColour[0]);
+    fill(companyColour[0]);
+    ellipse(mapX, googleY, 10, 10);
+
+    stroke(companyColour[1]);
+    fill(companyColour[1]);
+    ellipse(mapX, appleY, 10, 10);
+
+    stroke(companyColour[2]);
+    fill(companyColour[2]);
+    ellipse(mapX, microsoftY, 10, 10);
+
+    //PUT DISPLAY ON GRAPH SIDE
+    //printing year and GDP amount beside red circle
+    textAlign(LEFT, LEFT);
+    textSize(15);
+    
+    
+    if (x >= border && x <= width - (border * 2)) {
+      fill(companyColour[0]);
+      text("Google: " + year.google, textX, y);
+      fill(companyColour[1]);
+      text("Apple: " + year.apple, textX, y + 30);
+      fill(companyColour[2]);
+      text("Microsoft: " + year.microsoft, textX, y + 60);
+    }
+    else if(x < border){      
+      fill(companyColour[0]);
+      text("Google: " + years.get(0).google, textX, y);
+      fill(companyColour[1]);
+      text("Apple: " + years.get(0).apple, textX, y + 30);
+      fill(companyColour[2]);
+      text("Microsoft: " + years.get(0).microsoft, textX, y + 60);
+    }
+    else if(x > border - (width * 2)){
+      fill(companyColour[0]);
+      text("Google: " + years.get(years.size() - 1).google, textX, y);
+      fill(companyColour[1]);
+      text("Apple: " + years.get(years.size() - 1).apple, textX, y + 30);
+      fill(companyColour[2]);
+      text("Microsoft: " + years.get(years.size() - 1).microsoft, textX, y + 60);
+    }
+    
+    
+  }
+}
+
+//possibility to use a button, slider or some shit to go through the years. 
 
 void drawGooglePieChart()
 {
   float sum = sumGoogle();
   float max = maxGoogle();
   float thetaPrev = 0;
+  float size = 170;
 
 
   for (int i = 0; i < years.size (); i ++)
@@ -202,9 +325,12 @@ void drawGooglePieChart()
     fill(0, col, col);               
     arc(centX, centY, centX * 0.8, centY * 0.8f, thetaPrev, thetaNext);
     thetaPrev = thetaNext;
-   
-  }
     
+    stroke(255);
+    fill(0);
+    ellipse(centX, centY, size, size);
+    
+  }
 }
 
 void drawApplePieChart()
@@ -212,7 +338,7 @@ void drawApplePieChart()
   float sum = sumApple();
   float max = maxApple();
   float thetaPrev = 0;
-
+  float size = 170;
 
   for (int i = 0; i < years.size (); i ++)
   {
@@ -231,11 +357,14 @@ void drawApplePieChart()
     fill(255);
     textSize(12);
     text(year.y + ": " + (int)map(year.apple, 0, sumApple(), 0, 100) + "%", x, y);             
-    stroke(col);
-    fill(col);               
+    stroke(col, 0, col);
+    fill(col, 0, col);               
     arc(centX, centY, centX * 0.8f, centY * 0.8f, thetaPrev, thetaNext);
     thetaPrev = thetaNext;
-
+    
+    stroke(255);
+    fill(0);
+    ellipse(centX, centY, size, size);
   }
 }
 
@@ -244,6 +373,7 @@ void drawMicrosoftPieChart()
   float sum = sumMicrosoft();
   float max = maxMicrosoft();
   float thetaPrev = 0;
+  float size = 170;
 
 
   for (int i = 0; i < years.size (); i ++)
@@ -257,17 +387,25 @@ void drawMicrosoftPieChart()
     float col = map(year.microsoft, 0, max, 255, 100);
     float thetaNext = thetaPrev + theta;
     float radius = centX * 0.55f;
-    //float radius = centX * 2.0f;
     float x = centX + sin(thetaPrev + (theta * 0.5f) + HALF_PI) * radius;      
     float y = centY - cos(thetaPrev + (theta * 0.5f) + HALF_PI) * radius;
     fill(255);
     textSize(12);
     text(year.y + ": " + (int)map(year.microsoft, 0, sumMicrosoft(), 0, 100) + "%", x, y);             
-    stroke(col, 0, 0);
+    stroke(col, 0,0);
     fill(col, 0, 0);               
     arc(centX, centY, centX * 0.8f, centY * 0.8f, thetaPrev, thetaNext);
     thetaPrev = thetaNext;
-
+    
+    stroke(255);
+    fill(0);
+    ellipse(centX, centY, size, size);
+    stroke(255);
+    fill(companyColour[2]);
+    textAlign(CENTER);
+    textSize(25);
+    text(company[2], centX, centY);
+    
   }
 }
 
@@ -328,6 +466,8 @@ void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRang
 }
 
 void drawTrendGraph(float border, float maxValue) {
+
+
 
   for (int i = 1; i < years.size (); i ++)
   {
