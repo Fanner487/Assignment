@@ -7,4 +7,10 @@ The line graph has a line that follows your mouse and displays values on the lef
 
 In the doughnut chart, there is a slider that displays the year and percentage of companies bought by the Google, Apple and Microsoft depending on the position of the slider.
 
-![Alt text](https://github.com/Fanner487/Assignment/tree/master/data/home.JPG)
+![home](https://github.com/Fanner487/Assignment/tree/master/data/home.JPG)
+![Line Graph](https://github.com/Fanner487/Assignment/tree/master/data/linegraph.JPG)
+![Scatter Plot](https://github.com/Fanner487/Assignment/tree/master/data/scattergraph.JPG)
+![Doughnut Chart](https://github.com/Fanner487/Assignment/tree/master/data/doughnutchart.JPG)
+![Bar Graph](https://github.com/Fanner487/Assignment/tree/master/data/barchart.JPG)
+![Other](https://github.com/Fanner487/Assignment/tree/master/data/other.JPG)
+
