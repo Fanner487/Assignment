@@ -5,17 +5,18 @@ Company apple = new Company("Apple", color(255));
 Company microsoft = new Company("Microsoft", color(255, 0, 0));
 float centX, centY, highest, border, bX, bY;
 boolean lineG, scatG, coxG, doughG, barG = false;
-boolean drawLine = true;
-boolean drawAvg = false;
+boolean drawLine = false;
+boolean drawAvg = true;
 int bWidth= 150;
 int bHeight = 50;
 PImage googleImg, appleImg, microsoftImg;
 int imageWidth = 400;
 int imageHeight = 200;
 int doughnutSlider = 2001; //makes value in slider an integer
+PFont font;
 
 ControlP5 cp5;
-Button line, scatter, coxComb, doughnut, bar, back, lines, averages ;
+Button line, scatter, coxComb, doughnut, bar, back;
 
 Slider dnSlider;
 
@@ -24,6 +25,9 @@ void setup()
   size(1366, 700);
   background(0);
   smooth();
+  
+  font = createFont("CopperplateGothic-Bold-15.vlw", 32);
+  textFont(font);
   googleImg = loadImage("Google-logo.png");
   appleImg = loadImage("apple.png");
   microsoftImg = loadImage("microsoft.png");
@@ -53,47 +57,40 @@ void setup()
   doughnut = cp5.addButton("Doughnut Chart").setPosition(bX + bWidth, bY).setSize(bWidth, bHeight);
   bar = cp5.addButton("Bar Chart").setPosition(bX + (bWidth * 2), bY).setSize(bWidth, bHeight);
   back = cp5.addButton("Back").setPosition(width - 130, height - 30).setSize(bWidth - 20, bHeight - 20);
-  lines = cp5.addButton("Values").setPosition(50, 20).setSize(100, 10);
-  averages = cp5.addButton("Averages").setPosition(150, 20).setSize(100, 10);
   dnSlider = cp5.addSlider("doughnutSlider").setPosition(10, height - 40).setSize(300, 20).setRange(2001, 2015).setValue(google.year.get(0)).setNumberOfTickMarks(google.data.size()).setSliderMode(Slider.FLEXIBLE);
 
   //only show menu options
   back.hide();
   dnSlider.hide();
-  lines.hide();
-  averages.hide();
+
 }
 
 void draw()
 { 
-
+  background(0);
   image(googleImg, 20, 20, imageWidth, imageHeight + 100);
   image(appleImg, 20 + imageWidth, 70, imageHeight  + 20, imageHeight - 20);
   image(microsoftImg, 20 + (imageWidth  * 1.5f), 10, (imageHeight * 2) + 100, imageHeight * 2);
   int x = mouseX; // used to pass into drawLineAndFigures()
+  
   if (lineG == true) {
     
-    
-
+    background(0);
+    title("Line Graph");
+    drawAxis(google.data.size(), 10, google.maximum(), border);
     for (int i = 0; i < companies.size(); i++)
     {
-      if (drawLine == true) {
-        background(0);
-        drawAxis(google.data.size(), 10, google.maximum(), border);
-        companies.get(i).drawTrendGraph();
-        drawLineAndFigures(x);
-      }
-      if(drawAvg == true){
-        background(0);
-        drawAxis(google.data.size(), 10, google.maximum(), border);
-        companies.get(i).averageLine();
-      }
+      companies.get(i).drawTrendGraph();      
+      companies.get(i).averageLine();
     }
+    drawLineAndFigures(x);
+  
   }
 
 
   if (scatG == true) {
     background(0);
+    title("Scatter Plot");
     drawAxis(google.data.size(), 10, google.maximum(), border);
     //change this using a for loop
     scatterGraph();
@@ -101,12 +98,13 @@ void draw()
 
   if (coxG == true) {
     background(0);
-    //drawTotalPieChart();
-    drawTable();
+    drawTotalPieChart();
+    //drawTable();
   }
 
   if (doughG == true) {
     background(0);
+    title("Doughnut Charts");
     pushMatrix();
     translate(-(width * 0.05f), -(width * 0.1f));
     google.drawPieChart(dnSlider.getValue());
@@ -133,7 +131,8 @@ void draw()
 void title(String x)
 {
   textAlign(CENTER);
-  text(x, width /2, 10);
+  textSize(20);
+  text(x, width /2, 30);
 }
 
 void drawTable() {
@@ -271,25 +270,21 @@ void controlEvent(ControlEvent theEvent)
     doughnut.hide();
     dnSlider.hide();
     bar.hide();
-    lines.show();
-    averages.show();
     lineG = true;
     scatG = false;
     doughG = false;
     coxG = false;
     barG = false;
   }
-  
+
   if (theEvent.getName().equals("Values")) {
-    back.show();
+    //back.show();
     line.hide();
     scatter.hide();
     coxComb.hide();
     bar.hide();
     dnSlider.hide();
     doughnut.hide();
-    lines.show();
-    averages.show();
     drawLine = true;
     drawAvg = false;
     lineG = false;
@@ -298,7 +293,7 @@ void controlEvent(ControlEvent theEvent)
     coxG = false;
     barG = false;
   }
-  
+
   if (theEvent.getName().equals("Averages")) {
     back.show();
     line.hide();
@@ -307,8 +302,6 @@ void controlEvent(ControlEvent theEvent)
     bar.hide();
     dnSlider.hide();
     doughnut.hide();
-    lines.show();
-    averages.show();
     drawLine = false;
     drawAvg = true;
     lineG = false;
@@ -317,7 +310,7 @@ void controlEvent(ControlEvent theEvent)
     coxG = false;
     barG = false;
   }
-    
+
 
   if (theEvent.getName().equals("Scatter Graph")) {
     back.show();
@@ -327,8 +320,7 @@ void controlEvent(ControlEvent theEvent)
     bar.hide();
     dnSlider.hide();
     doughnut.hide();
-    lines.hide();
-    averages.hide();
+
 
     lineG = false;
     scatG = true;
@@ -345,8 +337,7 @@ void controlEvent(ControlEvent theEvent)
     doughnut.hide();
     dnSlider.show();
     bar.hide();
-    lines.hide();
-    averages.hide();
+
 
     lineG = false;
     scatG = false;
@@ -364,8 +355,7 @@ void controlEvent(ControlEvent theEvent)
     doughnut.hide();
     bar.hide();
     dnSlider.hide();
-    lines.hide();
-    averages.hide();
+ 
 
 
     lineG = false;
@@ -376,7 +366,7 @@ void controlEvent(ControlEvent theEvent)
   }
 
   if (theEvent.getName().equals("Back")) {
-    background(0);
+    
     lineG = false;
     scatG = false;
     doughG = false;
@@ -384,8 +374,7 @@ void controlEvent(ControlEvent theEvent)
     barG = false;
     back.hide();
     dnSlider.hide();
-    lines.hide();
-    averages.hide();
+ 
     line.show();
     scatter.show();
     coxComb.show();
@@ -400,8 +389,7 @@ void controlEvent(ControlEvent theEvent)
     coxComb.hide();
     doughnut.hide();
     bar.hide();
-    lines.hide();
-    averages.hide();
+   
 
     lineG = false;
     scatG = true;
@@ -555,7 +543,7 @@ void drawTotalPieChart()
     float mapY = map(select.sum(), 0, google.sum(), 0, centY);
 
     float theta = map(select.sum(), 0, totalOfThree, 0, TWO_PI);
-    textAlign(CENTER);   
+      
     float thetaNext = thetaPrev + theta;
     float radius = newX * 0.6f;  
     float x = newX + sin(thetaPrev + (theta * 0.5f) + HALF_PI) * radius;      
@@ -579,6 +567,8 @@ void drawTotalPieChart()
       }
     }
     fill(255);
+    textSize(12);
+    textAlign(CENTER); 
     text(select.name + ": " + (int)map(select.sum(), 0, totalOfThree, 0, 100) + "%", x, y);
 
     stroke(select.colour);

@@ -132,12 +132,16 @@ class Company {
   //draws average line in line graph
   void averageLine()
   {
-    stroke(this.colour);
-    fill(this.colour);
+    stroke(this.colour, 65);
+    fill(this.colour, 65);
     float x1 = border;
     float x2 = width - (border * 2);
     float y1 = map(this.average(), 0, google.maximum(), height - border, border);
     line(x1, y1, x2, y1);
+    textAlign(LEFT);
+    stroke(this.colour);
+    fill(this.colour);
+    text("Avg: " + (int)this.average(), x2 + 10, y1);
   }
   
   //draws the line graph
@@ -170,7 +174,7 @@ class Company {
 
     sum = this.sum();
     max = this.maximum();
-
+    
     for (int i = 0; i < this.data.size(); i ++)
     {
       fill(this.colour);
@@ -188,6 +192,7 @@ class Company {
       
       //takes slider value and displays value at corresponding doughnut chart position and expand element size
       if (i == num) {
+        textSize(12);
         text(this.year.get((int)num) + ": " + (int)map(this.data.get((int)num), 0, this.sum(), 0, 100) + "%", x, y);
         scale = 0.9f;
       }
@@ -214,6 +219,7 @@ class Company {
       //draws circle on inside of circle to make it a doughnut chart
       ellipse(centX, centY, size, size);
       fill(this.colour);
+      textSize(20);
       text(this.name, centX, centY);
     }
   }
