@@ -7,4 +7,4 @@ The line graph has a line that follows your mouse and displays values on the lef
 
 In the doughnut chart, there is a slider that displays the year and percentage of companies bought by the Google, Apple and Microsoft depending on the position of the slider.
 
-https://github.com/Fanner487/Assignment/tree/master/data/home.JPG
+![Alt text](https://github.com/Fanner487/Assignment/tree/master/data/home.JPG)
