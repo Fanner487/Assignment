@@ -10,7 +10,7 @@ class Company {
     this.colour = c;
     this.name = comp;
   }
-  
+
   //displays the data
   void display() {
 
@@ -23,7 +23,7 @@ class Company {
 
     println("Sum: " + this.sum());
     println("Average: " + this.average());
-    println("Max: " + this.maximum() + "Min: " + this.minimum());
+    println("Max: " + this.maximum());
   }
 
   float sum() {
@@ -61,40 +61,22 @@ class Company {
     return avg;
   }
 
-  float minimum() {
-
-    float min = this.data.get(0);
-
-    for (int i = 0; i < this.data.size(); i++) {
-
-      if (this.data.get(i) < min)
-      {
-        min = this.data.get(i);
-      }
-    }
-
-    return min;
-  }
-  
   float standardDev()
   {
-    float temp[] = new float[this.data.size()];
     float sum = 0;
     float result;
-    
+
     //square the result of each element in data array minus the mean and add it to sum
-    for(int i = 0; i < this.data.size(); i++){
-      
-     sum += sq((this.data.get(i) - this.average())); 
-    
+    for (int i = 0; i < this.data.size(); i++) {
+
+      sum += sq((this.data.get(i) - this.average()));
     }
-    
-    //gett average of square results
+
+    //get square root of average of squared results
     result = sqrt(sum / this.data.size());
     return result;
-    
   }
-  
+
   float correlation()
   {
     float[] temp = new float[this.data.size()];
@@ -106,29 +88,27 @@ class Company {
     float aSquared = 0;
     float bSquared = 0;
     float result;
-    
+
     //getting mean of years
-    for(int i = 0; i < this.year.size(); i++){    
-     temp[i] = this.year.get(i) - 2000;
-     
-     sumX += temp[i];
+    for (int i = 0; i < this.year.size(); i++) {    
+      temp[i] = this.year.get(i) - 2000;
+
+      sumX += temp[i];
     }
     avgX = sumX / this.year.size();
-    
-    for(int i = 0; i < this.year.size(); i++){    
+
+    for (int i = 0; i < this.year.size(); i++) {    
       x[i] = temp[i] - avgX;
       y[i] = this.data.get(i) - this.average();
-      println("x[" + i + "]: " + x[i] + "y[" + i + "]: " + y[i]);
       aMultB += (x[i] * y[i]);
       aSquared += sq(x[i]);
       bSquared += sq(y[i]);
     }
-    
-    
-  result = aMultB / sqrt(aSquared * bSquared);
-  return result;
+
+    result = aMultB / sqrt(aSquared * bSquared);
+    return result;
   }
-  
+
   //draws average line in line graph
   void averageLine()
   {
@@ -141,19 +121,20 @@ class Company {
     textAlign(LEFT);
     stroke(this.colour);
     fill(this.colour);
+    //display average value at end of line
     text("Avg: " + (int)this.average(), x2 + 10, y1);
   }
-  
+
   //draws the line graph
   void drawTrendGraph() {
 
-    for (int i = 1; i < google.data.size(); i ++)
+    for (int i = 1; i < dataIndexRange; i ++)
     {
       stroke(this.colour);
       fill(this.colour);
 
-      float x1 = map(i-1, 0, google.data.size(), border, width - border);
-      float x2 = map(i, 0, google.data.size(), border, width - border);
+      float x1 = map(i-1, 0, dataIndexRange, border, width - border);
+      float x2 = map(i, 0, dataIndexRange, border, width - border);
       float y1 = map(this.data.get(i-1), 0, google.maximum(), height - border, border);
       float y2 = map(this.data.get(i), 0, google.maximum(), height - border, border);
 
@@ -174,7 +155,7 @@ class Company {
 
     sum = this.sum();
     max = this.maximum();
-    
+
     for (int i = 0; i < this.data.size(); i ++)
     {
       fill(this.colour);
@@ -189,17 +170,16 @@ class Company {
       float x = ((centX) + sin(thetaPrev + (theta * 0.5f) + HALF_PI) * radius);      
       float y = ((centY) - cos(thetaPrev + (theta * 0.5f) + HALF_PI) * radius);
       fill(255);
-      
+
       //takes slider value and displays value at corresponding doughnut chart position and expand element size
       if (i == num) {
         textSize(12);
         text(this.year.get((int)num) + ": " + (int)map(this.data.get((int)num), 0, this.sum(), 0, 100) + "%", x, y);
         scale = 0.9f;
-      }
-      else{
+      } else {
         scale = 0.8f;
       }
-      
+
       //Checks the name field of class and determines the fill and stroke of the arc
       if (this.name.equals("Google")) {      
         stroke(127);

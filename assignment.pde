@@ -1,23 +1,24 @@
 import controlP5.*;
 ArrayList<Company> companies = new ArrayList<Company>();
+
+//instantiate each one first, then add values into its respective arrays then add to companies ArrayList
 Company google = new Company("Google", color(0, 0, 255));
 Company apple = new Company("Apple", color(255));
 Company microsoft = new Company("Microsoft", color(255, 0, 0));
 float centX, centY, highest, border, bX, bY;
-boolean lineG, scatG, coxG, doughG, barG = false;
-boolean drawLine = false;
-boolean drawAvg = true;
+boolean lineG, scatG, otherG, doughG, barG = false; // flags to determine what graphs get displayed in draw()
 int bWidth= 150;
 int bHeight = 50;
-PImage googleImg, appleImg, microsoftImg;
-int imageWidth = 400;
+int imageWidth = 400; //image height and width
 int imageHeight = 200;
 int doughnutSlider = 2001; //makes value in slider an integer
 PFont font;
+PImage googleImg, appleImg, microsoftImg;
+int dataIndexRange;
 
+//buttons and slider
 ControlP5 cp5;
-Button line, scatter, coxComb, doughnut, bar, back;
-
+Button line, scatter, coxComb, doughnut, bar, back; 
 Slider dnSlider;
 
 void setup()
@@ -25,7 +26,7 @@ void setup()
   size(1366, 700);
   background(0);
   smooth();
-  
+
   font = createFont("CopperplateGothic-Bold-15.vlw", 32);
   textFont(font);
   googleImg = loadImage("Google-logo.png");
@@ -36,70 +37,80 @@ void setup()
   companies.add(google);
   companies.add(apple);
   companies.add(microsoft);
+  dataIndexRange = google.data.size(); //used for iterating through arrays
 
   border = width * 0.05f;
-  centX = height * 0.5f;
+  centX = height * 0.5f; //x and y coordinates used by table, coxcomb graph and doughnut charts
   centY = height * 0.5f;
-  bX = width * 0.45f;
+  bX = width * 0.45f; // width and height of buttons
   bY = height * 0.8f;
-
-  for (int i = 0; i < companies.size(); i++)
-  {
-    println(companies.get(i).correlation());
-  }
 
   cp5 = new ControlP5(this);
 
   //instantiate buttons and slider
   line = cp5.addButton("Line Graph").setPosition(bX - (bWidth * 2), bY).setSize(bWidth, bHeight);
   scatter = cp5.addButton("Scatter Graph").setPosition(bX - bWidth, bY).setSize(bWidth, bHeight);
-  coxComb = cp5.addButton("Coxcomb Graph").setPosition(bX, bY).setSize(bWidth, bHeight);
+  coxComb = cp5.addButton("Bar Chart").setPosition(bX, bY).setSize(bWidth, bHeight);
   doughnut = cp5.addButton("Doughnut Chart").setPosition(bX + bWidth, bY).setSize(bWidth, bHeight);
-  bar = cp5.addButton("Bar Chart").setPosition(bX + (bWidth * 2), bY).setSize(bWidth, bHeight);
+  bar = cp5.addButton("Other").setPosition(bX + (bWidth * 2), bY).setSize(bWidth, bHeight);
   back = cp5.addButton("Back").setPosition(width - 130, height - 30).setSize(bWidth - 20, bHeight - 20);
-  dnSlider = cp5.addSlider("doughnutSlider").setPosition(10, height - 40).setSize(300, 20).setRange(2001, 2015).setValue(google.year.get(0)).setNumberOfTickMarks(google.data.size()).setSliderMode(Slider.FLEXIBLE);
+  dnSlider = cp5.addSlider("doughnutSlider").setPosition(10, height - 40).setSize(300, 20).setRange(2001, 2015).setValue(google.year.get(0)).setNumberOfTickMarks(dataIndexRange).setSliderMode(Slider.FLEXIBLE);
 
   //only show menu options
   back.hide();
   dnSlider.hide();
-
+  
+  //display values 
+  for(int i = 0; i < companies.size(); i++)
+  {
+    companies.get(i).display();
+  }
 }
 
 void draw()
 { 
   background(0);
-  image(googleImg, 20, 20, imageWidth, imageHeight + 100);
-  image(appleImg, 20 + imageWidth, 70, imageHeight  + 20, imageHeight - 20);
-  image(microsoftImg, 20 + (imageWidth  * 1.5f), 10, (imageHeight * 2) + 100, imageHeight * 2);
+  textAlign(LEFT);
+  fill(255);
+  textSize(20);
+  text("Data Visualisation of How Many Companies", 50 + imageWidth, 110);
+  image(googleImg, 150, 100, imageWidth, imageHeight + 100);
+  image(appleImg, 150 + imageWidth, 150, imageHeight  + 20, imageHeight - 20);
+  image(microsoftImg, 150 + (imageWidth  * 1.5f), 60, (imageHeight * 2) + 100, imageHeight * 2);
+  text("Have Acquired Since 2001", 125 + imageWidth, 200 + imageHeight );
+
   int x = mouseX; // used to pass into drawLineAndFigures()
-  
+
   if (lineG == true) {
-    
+
     background(0);
     title("Line Graph");
-    drawAxis(google.data.size(), 10, google.maximum(), border);
+    drawAxis(dataIndexRange, 10, maxValue());
     for (int i = 0; i < companies.size(); i++)
     {
       companies.get(i).drawTrendGraph();      
       companies.get(i).averageLine();
     }
     drawLineAndFigures(x);
-  
   }
-
 
   if (scatG == true) {
     background(0);
     title("Scatter Plot");
-    drawAxis(google.data.size(), 10, google.maximum(), border);
+    drawAxis(dataIndexRange, 10, maxValue());
     //change this using a for loop
     scatterGraph();
   }
 
-  if (coxG == true) {
+  if (otherG == true) {
     background(0);
-    drawTotalPieChart();
-    //drawTable();
+    title("Other Information");
+    drawCoxComb();
+
+    pushMatrix();
+    translate(width * 0.35f, -(height * 0.2f));
+    drawTable();
+    popMatrix();
   }
 
   if (doughG == true) {
@@ -123,19 +134,21 @@ void draw()
 
   if (barG == true) {
     background(0);
-    drawAxis(google.data.size(), 10, google.maximum(), border);
+    drawAxis(dataIndexRange, 10, maxValue());
     drawBarChart();
   }
 }//end draw
 
 void title(String x)
 {
+  fill(255);
   textAlign(CENTER);
   textSize(20);
   text(x, width /2, 30);
 }
 
 void drawTable() {
+
   stroke(255);
   fill(255);
   textSize(15);
@@ -149,6 +162,10 @@ void drawTable() {
   calcs[2] = "Maximum";
   calcs[3] = "Std Dev";
   calcs[4] = "Corr Coef";
+
+  //title above table
+  text("More information", centX * 1.6f, centY - 10);
+
   for (int row = 0; row < companies.size() + 2; row++)
   { 
     //draw rows and columns
@@ -159,7 +176,7 @@ void drawTable() {
       text(calcs[row], centX + (cellWidth * row + 1) + paddingLeft, centY + ((centY * cellHeight) * (row + 1)) + paddingTop);
     }
   }
-  //maybe a nested for loop?
+
   for (int i = 0; i < calcs.length; i++) {
   }
 
@@ -176,19 +193,35 @@ void drawTable() {
   }
 }
 
+//displays company names and colours at top right of graph
+void drawCompanies()
+{
+  float spacing = 30;
+  float offset = 10;
+  for (int i = 0; i < companies.size(); i++)
+  {
+    fill(companies.get(i).colour);
+    textAlign(LEFT, TOP);
+    textSize(20);
+    text(companies.get(i).name, border + offset, border + (spacing * i));
+  }
+}
+
 void drawBarChart()
 {
   float barWidth = 15;
   float offset = 3; // gap between each bar
   float r = 10; //setting radius on top
 
-  for (int i = 0; i < google.data.size(); i ++)
+  drawCompanies();
+
+  for (int i = 0; i < dataIndexRange; i ++)
   {
     for (int j = 0; j < companies.size(); j++) 
     {
       Company company = companies.get(j);
       //maps colour of company to value.
-      float col = map(company.data.get(i), 0, google.maximum(), 255, 100);
+      float col = map(company.data.get(i), 0, maxValue(), 255, 100);
 
       //checks company instance name and uses stroke and fill according to which one is selected 
       if (company.name.equals("Google")) {      
@@ -202,8 +235,8 @@ void drawBarChart()
         fill(col, 0, 0);
       }
 
-      float x = map(i, 0, google.data.size(), border, width - (border));
-      float y = map(companies.get(j).data.get(i), 0, google.maximum(), border, height - (border* 2));
+      float x = map(i, 0, dataIndexRange, border, width - (border));
+      float y = map(companies.get(j).data.get(i), 0, maxValue(), border, height - (border* 2));
       rect((float)x + ((barWidth + offset) * j), height - border, (float)barWidth, -y, r, r, 0, 0);
     }
   }
@@ -224,19 +257,22 @@ void drawLineAndFigures(int x)
 
     line(border, border, border, height - border);
   }
-
-  float textX = width - (border * 2);
+  
+  float offset = 10;
+  float textX = border + offset;
   float y = border;
   //only executes if x is within borders of graph
   if (x > border && x < width - (border * 2)) {
     //num maps passed in mouseX value and maps to integer index in data array range
-    int num = (int)map(x, border, width - border, 0, google.data.size());
+    int num = (int)map(x, border, width - border, 0, dataIndexRange);
 
     if (x >= border && x <= width - (border * 2)) {
+      stroke(255);
+      text(google.year.get(num), textX, y);
       for (int i = 0; i < companies.size(); i++) {
         stroke(companies.get(i).colour);
         fill(companies.get(i).colour);
-        text(companies.get(i).name + ": " + companies.get(i).data.get(num), textX, y + (30 * i));
+        text(companies.get(i).name + ": " + companies.get(i).data.get(num), textX, y + (30 * (i + 1)));
       }
     }
     //returns first data values of each instance if x is less than left border
@@ -253,157 +289,19 @@ void drawLineAndFigures(int x)
       for (int i = 0; i < companies.size(); i++) {
         stroke(companies.get(i).colour);
         fill(companies.get(i).colour);
-        text(companies.get(i).name + ": " + companies.get(i).data.get(google.data.size() -1 ), textX, y + (30 * i));
+        text(companies.get(i).name + ": " + companies.get(i).data.get(dataIndexRange -1 ), textX, y + (30 * i));
       }
     }
   }
 }
 
-void controlEvent(ControlEvent theEvent)
-{
-
-  if (theEvent.getName().equals("Line Graph")) {
-    back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    doughnut.hide();
-    dnSlider.hide();
-    bar.hide();
-    lineG = true;
-    scatG = false;
-    doughG = false;
-    coxG = false;
-    barG = false;
-  }
-
-  if (theEvent.getName().equals("Values")) {
-    //back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    bar.hide();
-    dnSlider.hide();
-    doughnut.hide();
-    drawLine = true;
-    drawAvg = false;
-    lineG = false;
-    scatG = false;
-    doughG = false;
-    coxG = false;
-    barG = false;
-  }
-
-  if (theEvent.getName().equals("Averages")) {
-    back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    bar.hide();
-    dnSlider.hide();
-    doughnut.hide();
-    drawLine = false;
-    drawAvg = true;
-    lineG = false;
-    scatG = false;
-    doughG = false;
-    coxG = false;
-    barG = false;
-  }
-
-
-  if (theEvent.getName().equals("Scatter Graph")) {
-    back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    bar.hide();
-    dnSlider.hide();
-    doughnut.hide();
-
-
-    lineG = false;
-    scatG = true;
-    doughG = false;
-    coxG = false;
-    barG = false;
-  }
-
-  if (theEvent.getName().equals("Doughnut Chart")) {       
-    back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    doughnut.hide();
-    dnSlider.show();
-    bar.hide();
-
-
-    lineG = false;
-    scatG = false;
-    doughG = true;
-    coxG = false;
-    barG = false;
-  }
-
-  if (theEvent.getName().equals("Coxcomb Graph")) {
-
-    back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    doughnut.hide();
-    bar.hide();
-    dnSlider.hide();
- 
-
-
-    lineG = false;
-    scatG = false;
-    doughG = false;
-    coxG = true;
-    barG = false;
-  }
-
-  if (theEvent.getName().equals("Back")) {
-    
-    lineG = false;
-    scatG = false;
-    doughG = false;
-    coxG = false;
-    barG = false;
-    back.hide();
-    dnSlider.hide();
- 
-    line.show();
-    scatter.show();
-    coxComb.show();
-    doughnut.show();
-    bar.show();
-  }
-
-  if (theEvent.getName().equals("Bar Chart")) {
-    back.show();
-    line.hide();
-    scatter.hide();
-    coxComb.hide();
-    doughnut.hide();
-    bar.hide();
-   
-
-    lineG = false;
-    scatG = true;
-    doughG = false;
-    coxG = false;
-    barG = true;
-  }
-}
-
 void scatterGraph()
 {
-  for (int i = 0; i < google.data.size(); i ++)
+  //displays copmanies at top left handd of graph
+  drawCompanies();
+  
+  for (int i = 0; i < dataIndexRange; i ++)
   {
-
     float size = 100;
     float x, y;
     int count = 0; //used for rotating semi circle. If it is 1 then rotate in the loop.
@@ -412,11 +310,11 @@ void scatterGraph()
 
     for (int j = 0; j < companies.size(); j++) {
 
-      sizeComp[j] = map(companies.get(j).data.get(i), 0, google.maximum(), 0, size);
+      sizeComp[j] = map(companies.get(j).data.get(i), 0, maxValue(), 0, size);
       values[j] = companies.get(j).data.get(i);
     }
 
-    //if Google and Apple values are the same at same year, draw semi circle for both values
+    //if Google and Apple values are the same at same year, draw semi circle for both values so both get shown
     if (google.data.get(i) == apple.data.get(i)) {
 
       //draws semicircles
@@ -426,13 +324,13 @@ void scatterGraph()
 
         pushMatrix();
         //maps x and y coordinates to the Scatter Graph to each element
-        x = map(i, 0, google.data.size(), border, width - border);
-        y = map(values[p], 0, google.maximum(), height - border, border);
+        x = map(i, 0, dataIndexRange, border, width - border);
+        y = map(values[p], 0, maxValue(), height - border, border);
         translate(x, y);
 
         //Only rotates semi-circle every two iterations
         if (count == 1) {
-          rotate(-PI);
+          rotate(PI);
         }      
 
         arc((float)0, 0, sizeComp[p], sizeComp[p], 0, PI);
@@ -441,9 +339,9 @@ void scatterGraph()
         count++;
       }
 
-      //draws remaining point
-      x = map(i, 0, google.data.size(), border, width - border);
-      y = map(microsoft.data.get(i), 0, google.maximum(), height - border, border);
+      //draw remaining point
+      x = map(i, 0, dataIndexRange, border, width - border);
+      y = map(microsoft.data.get(i), 0, maxValue(), height - border, border);
       stroke(microsoft.colour);
       fill(microsoft.colour);
       ellipse((float)x, y, sizeComp[2], sizeComp[2]);
@@ -455,12 +353,12 @@ void scatterGraph()
         stroke(companies.get(p).colour);
         fill(companies.get(p).colour);
         pushMatrix();
-        x = map(i, 0, google.data.size(), border, width - border);
-        y = map(values[p], 0, google.maximum(), height - border, border);
+        x = map(i, 0, dataIndexRange, border, width - border);
+        y = map(values[p], 0, maxValue(), height - border, border);
         translate(x, y);
 
         if (count == 1) {
-          rotate(-PI);
+          rotate(PI);
         }
 
         arc((float)0, 0, sizeComp[p], sizeComp[p], 0, PI);
@@ -469,8 +367,8 @@ void scatterGraph()
       }
 
       //draws remaining point
-      x = map(i, 0, google.data.size(), border, width - border);
-      y = map(apple.data.get(i), 0, google.maximum(), height - border, border);
+      x = map(i, 0, dataIndexRange, border, width - border);
+      y = map(apple.data.get(i), 0, maxValue(), height - border, border);
       stroke(apple.colour);
       fill(apple.colour);
       ellipse((float)x, y, sizeComp[1], sizeComp[1]);
@@ -480,29 +378,33 @@ void scatterGraph()
         stroke(companies.get(p).colour);
         fill(companies.get(p).colour);
         pushMatrix();
-        x = map(i, 0, google.data.size(), border, width - border);
-        y = map(values[p], 0, google.maximum(), height - border, border);
+        x = map(i, 0, dataIndexRange, border, width - border);
+        y = map(values[p], 0, maxValue(), height - border, border);
         translate(x, y);
+        
         if (count == 1) {
-          rotate(-PI);
+          rotate(PI);
         }  
+        
         arc((float)0, 0, sizeComp[p], sizeComp[p], 0, PI);
         popMatrix();
         count++;
       }
+      
       //draws remaining point
-      x = map(i, 0, google.data.size(), border, width - border);
-      y = map(google.data.get(i), 0, google.maximum(), height - border, border);
+      x = map(i, 0, dataIndexRange, border, width - border);
+      y = map(google.data.get(i), 0, maxValue(), height - border, border);
       stroke(google.colour);
       fill(google.colour);
       ellipse((float)x, y, sizeComp[0], sizeComp[0]);
     }
-    //or normally draw points at three points
+    //or normally draw circles at three points
     else {
       y = 0;
+      
       for (int k = 0; k < companies.size(); k++) {
-        x = map(i, 0, google.data.size(), border, width - border);
-        y = map(values[k], 0, google.maximum(), height - border, border);
+        x = map(i, 0, dataIndexRange, border, width - border);
+        y = map(values[k], 0, maxValue(), height - border, border);
         stroke(companies.get(k).colour);
         fill(companies.get(k).colour);
         ellipse((float)x, y, sizeComp[k], sizeComp[k]);
@@ -511,7 +413,7 @@ void scatterGraph()
   }
 }
 
-void drawTotalPieChart()
+void drawCoxComb()
 {
   float newX, newY;
   newX = centX;
@@ -521,14 +423,15 @@ void drawTotalPieChart()
   float toMouseY = mouseY - centY;
   float angle = atan2(toMouseY, toMouseX);
   float thetaPrev = 0;
-
+  float totalOfThree = 0;
+  
+  textSize(15);
+  text("CoxComb chart on % companies bought by each (angle)\n and standard deviation of each company (height)", centX, 80);
   //mapping negative angle into positive
   if (angle < 0)
   {
     angle = map(angle, -PI, 0, PI, TWO_PI);
   }
-
-  float totalOfThree = 0;
 
   //adding all sums of companies to sum 
   for (int i = 0; i < companies.size(); i ++)
@@ -539,11 +442,13 @@ void drawTotalPieChart()
   for (int i = 0; i < companies.size(); i ++)
   {
     Company select = companies.get(i);
-    float mapX = map(select.sum(), 0, google.sum(), 0, centX);
-    float mapY = map(select.sum(), 0, google.sum(), 0, centY);
-
+    //maps out the standard deviation of all companies to Googles. This maps how far out the standard deviation goes
+    float mapX = map(select.standardDev(), 0, google.standardDev(), 0, centX);
+    float mapY = map(select.standardDev(), 0, google.standardDev(), 0, centY);
+    
+    //angle determines how many companies they bought in proportion to total companies bought by the three.
     float theta = map(select.sum(), 0, totalOfThree, 0, TWO_PI);
-      
+
     float thetaNext = thetaPrev + theta;
     float radius = newX * 0.6f;  
     float x = newX + sin(thetaPrev + (theta * 0.5f) + HALF_PI) * radius;      
@@ -569,8 +474,9 @@ void drawTotalPieChart()
     fill(255);
     textSize(12);
     textAlign(CENTER); 
+    //maps percentage of companies bought to total companies bought
     text(select.name + ": " + (int)map(select.sum(), 0, totalOfThree, 0, 100) + "%", x, y);
-
+    text("Std Dev: " + select.standardDev(), x, y + 20);
     stroke(select.colour);
     fill(select.colour); 
     arc(centX, centY, mapX, mapY, thetaPrev, thetaNext);
@@ -578,7 +484,7 @@ void drawTotalPieChart()
   }
 }
 
-void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRange, float border)
+void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRange)
 {
   textSize(12);
   stroke(200, 200, 200);
@@ -589,7 +495,7 @@ void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRang
   line(border, height - border, width - (border * 2), height - border);
 
   float horizontalWindowRange = (width - (border * 2.0f));
-  float horizontalDataGap = google.data.size() / horizontalIntervals;
+  float horizontalDataGap = dataIndexRange / horizontalIntervals;
   float horizontalWindowGap = horizontalWindowRange / horizontalIntervals;
   float tickSize = border * 0.1f;
 
@@ -631,6 +537,22 @@ void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRang
   textSize(15);
 }
 
+float maxValue()
+{
+  float max = 0;
+  for (int i = 0; i < companies.size(); i++)
+  {
+    for (int j = 0; j < dataIndexRange; j++)
+      if (companies.get(i).data.get(j) > max)
+      {
+        Company company = companies.get(i);
+        max = company.data.get(j);
+      }
+  }
+
+  return max;
+}
+
 void loadData() {
 
   String[] lines = loadStrings("newData.txt");
@@ -648,5 +570,140 @@ void loadData() {
     google.data.add(Integer.parseInt(elements[1]));
     apple.data.add(Integer.parseInt(elements[2]));    
     microsoft.data.add(Integer.parseInt(elements[3]));
+  }
+}
+
+//Show/hide buttons and set flags on what graphs can be drawn in draw()
+void controlEvent(ControlEvent theEvent)
+{
+
+  if (theEvent.getName().equals("Line Graph")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    dnSlider.hide();
+    bar.hide();
+    
+    lineG = true;
+    scatG = false;
+    doughG = false;
+    otherG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Values")) {
+    //back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    bar.hide();
+    dnSlider.hide();
+    doughnut.hide();
+    
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    otherG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Averages")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    bar.hide();
+    dnSlider.hide();
+    doughnut.hide();
+    
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    otherG = false;
+    barG = false;
+  }
+
+
+  if (theEvent.getName().equals("Scatter Graph")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    bar.hide();
+    dnSlider.hide();
+    doughnut.hide();
+
+    lineG = false;
+    scatG = true;
+    doughG = false;
+    otherG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Doughnut Chart")) {       
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    dnSlider.show();
+    bar.hide();
+
+
+    lineG = false;
+    scatG = false;
+    doughG = true;
+    otherG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Other")) {
+
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    bar.hide();
+    dnSlider.hide();
+    
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    otherG = true;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Back")) {
+    line.show();
+    scatter.show();
+    coxComb.show();
+    doughnut.show();
+    bar.show();
+    back.hide();
+    dnSlider.hide();
+    
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    otherG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Bar Chart")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    bar.hide();
+
+    lineG = false;
+    scatG = true;
+    doughG = false;
+    otherG = false;
+    barG = true;
   }
 }
