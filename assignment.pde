@@ -1,393 +1,609 @@
-ArrayList<Year> years = new ArrayList<Year>();
-int which = 0;
-float zeroX, zeroY;
-float centX, centY;
-float highest, border;
-String[] company;
-color[] companyColour; 
+import controlP5.*;
+ArrayList<Company> companies = new ArrayList<Company>();
+Company google = new Company("Google", color(0, 0, 255));
+Company apple = new Company("Apple", color(255));
+Company microsoft = new Company("Microsoft", color(255, 0, 0));
+float centX, centY, highest, border, bX, bY;
+boolean lineG, scatG, coxG, doughG, barG = false;
+boolean drawLine = true;
+boolean drawAvg = false;
+int bWidth= 150;
+int bHeight = 50;
+PImage googleImg, appleImg, microsoftImg;
+int imageWidth = 400;
+int imageHeight = 200;
+int doughnutSlider = 2001; //makes value in slider an integer
 
-PFont font;
+ControlP5 cp5;
+Button line, scatter, coxComb, doughnut, bar, back, lines, averages ;
+
+Slider dnSlider;
 
 void setup()
 {
   size(1366, 700);
-  font = loadFont("BritannicBold-15.vlw");
-  textFont(font);
   background(0);
   smooth();
-
-  zeroX = 0;
-  zeroY = 0;
+  googleImg = loadImage("Google-logo.png");
+  appleImg = loadImage("apple.png");
+  microsoftImg = loadImage("microsoft.png");
 
   loadData();
-  displayFigures();
-
-  company = new String[3];
-  company[0] = "Google";
-  company[1] = "Apple";
-  company[2] = "Microsoft";
-
-  companyColour = new color[3];
-  companyColour[0] = color(0, 0, 255);
-  companyColour[1] = color(255);
-  companyColour[2] = color(255, 0, 0);
-
+  companies.add(google);
+  companies.add(apple);
+  companies.add(microsoft);
 
   border = width * 0.05f;
   centX = height * 0.5f;
   centY = height * 0.5f;
+  bX = width * 0.45f;
+  bY = height * 0.8f;
+
+  for (int i = 0; i < companies.size(); i++)
+  {
+    println(companies.get(i).correlation());
+  }
+
+  cp5 = new ControlP5(this);
+
+  //instantiate buttons and slider
+  line = cp5.addButton("Line Graph").setPosition(bX - (bWidth * 2), bY).setSize(bWidth, bHeight);
+  scatter = cp5.addButton("Scatter Graph").setPosition(bX - bWidth, bY).setSize(bWidth, bHeight);
+  coxComb = cp5.addButton("Coxcomb Graph").setPosition(bX, bY).setSize(bWidth, bHeight);
+  doughnut = cp5.addButton("Doughnut Chart").setPosition(bX + bWidth, bY).setSize(bWidth, bHeight);
+  bar = cp5.addButton("Bar Chart").setPosition(bX + (bWidth * 2), bY).setSize(bWidth, bHeight);
+  back = cp5.addButton("Back").setPosition(width - 130, height - 30).setSize(bWidth - 20, bHeight - 20);
+  lines = cp5.addButton("Values").setPosition(50, 20).setSize(100, 10);
+  averages = cp5.addButton("Averages").setPosition(150, 20).setSize(100, 10);
+  dnSlider = cp5.addSlider("doughnutSlider").setPosition(10, height - 40).setSize(300, 20).setRange(2001, 2015).setValue(google.year.get(0)).setNumberOfTickMarks(google.data.size()).setSliderMode(Slider.FLEXIBLE);
+
+  //only show menu options
+  back.hide();
+  dnSlider.hide();
+  lines.hide();
+  averages.hide();
 }
 
-
-
 void draw()
-{
-  background(0);
-  int x = mouseX;
+{ 
 
-  if (keyPressed) {
-    if ( key == '0')
+  image(googleImg, 20, 20, imageWidth, imageHeight + 100);
+  image(appleImg, 20 + imageWidth, 70, imageHeight  + 20, imageHeight - 20);
+  image(microsoftImg, 20 + (imageWidth  * 1.5f), 10, (imageHeight * 2) + 100, imageHeight * 2);
+  int x = mouseX; // used to pass into drawLineAndFigures()
+  if (lineG == true) {
+    
+    
+
+    for (int i = 0; i < companies.size(); i++)
     {
-      which = 0;
-    } else if ( key == '1')
-    {
-      which = 1;
-    } else if ( key == '2')
-    {
-      which = 2;
-    } else if ( key == '3')
-    {
-      which = 3;
-    } else if ( key == '4')
-    {
-      which = 4;
-    } else if ( key == '5')
-    {
-      which = 5;
+      if (drawLine == true) {
+        background(0);
+        drawAxis(google.data.size(), 10, google.maximum(), border);
+        companies.get(i).drawTrendGraph();
+        drawLineAndFigures(x);
+      }
+      if(drawAvg == true){
+        background(0);
+        drawAxis(google.data.size(), 10, google.maximum(), border);
+        companies.get(i).averageLine();
+      }
     }
   }
 
-  if (which == 0)
-  {
-    drawAxis(years.size(), 10, maximum(company[0]), border);
-    
-    for(int i = 0; i < company.length; i++){
-      drawTrendGraph(company[i], border, maximum(company[0]));
-    }
-    redLine(x);
-    drawCircle(x);
-  } else if (which == 1)
-  {
+
+  if (scatG == true) {
+    background(0);
+    drawAxis(google.data.size(), 10, google.maximum(), border);
+    //change this using a for loop
+    scatterGraph();
+  }
+
+  if (coxG == true) {
+    background(0);
+    //drawTotalPieChart();
+    drawTable();
+  }
+
+  if (doughG == true) {
+    background(0);
     pushMatrix();
     translate(-(width * 0.05f), -(width * 0.1f));
-    drawPieChart(company[0]);
+    google.drawPieChart(dnSlider.getValue());
     popMatrix();
 
     pushMatrix();
     translate(width * 0.25f, height * 0.2f);
-    drawPieChart(company[1]);
+    apple.drawPieChart(dnSlider.getValue());
     popMatrix();
 
     pushMatrix();
     translate(width * 0.55f, -(width * 0.1f));
-    drawPieChart(company[1]);
+    microsoft.drawPieChart(dnSlider.getValue());
     popMatrix();
-  } else if (which == 2)
-  {
-    drawAxis(years.size(), 10, maximum(company[0]), border);
-    drawBarChart();
-  } else if (which == 3)
-  {
-    drawAxis(years.size(), 10, maximum(company[0]), border);
-    scatterGraph();
   }
-  if (which == 4)
-  {
-    pushMatrix();
-    translate(width * 0.25f, 0);
-    drawTotalPieChart();
-    popMatrix();
+
+  if (barG == true) {
+    background(0);
+    drawAxis(google.data.size(), 10, google.maximum(), border);
+    drawBarChart();
   }
 }//end draw
 
-//need to change this
-void scatterGraph()
+void title(String x)
 {
+  textAlign(CENTER);
+  text(x, width /2, 10);
+}
 
-  stroke(0, 0, 255);
-  fill(0, 0, 255);
+void drawTable() {
+  stroke(255);
+  fill(255);
+  textSize(15);
+  float cellWidth = 0.3f;
+  float cellHeight = 0.1f;
+  float paddingLeft = 35;
+  float paddingTop = 20;
+  String[] calcs = new String[5];
+  calcs[0] = "Sum";
+  calcs[1] = "Average";
+  calcs[2] = "Maximum";
+  calcs[3] = "Std Dev";
+  calcs[4] = "Corr Coef";
+  for (int row = 0; row < companies.size() + 2; row++)
+  { 
+    //draw rows and columns
+    for (int col = 0; col < calcs.length + 2; col++)
+    {
+      line(centX + ((centX * cellWidth) * row), centY, centX + ((centX * cellWidth) * row), centY + ((centY * cellHeight) * col));
+      line(centX, centY + ((centY * cellHeight) * col), centX + ((centX * cellWidth) * row), centY + ((centY * cellHeight) * col));
+      text(calcs[row], centX + (cellWidth * row + 1) + paddingLeft, centY + ((centY * cellHeight) * (row + 1)) + paddingTop);
+    }
+  }
+  //maybe a nested for loop?
+  for (int i = 0; i < calcs.length; i++) {
+  }
 
-  for (int i = 0; i < years.size (); i ++)
-  {
-    Year value = years.get(i);
-    float size = 100;
-    float sizeGoogle = map(value.google, 0, maxValueOfThree(), 0, size);
-    float sizeApple = map(value.apple, 0, maxValueOfThree(), 0, size);
-    float sizeMicrosoft = map(value.microsoft, 0, maxValueOfThree(), 0, size);
- 
+  for (int i = 1; i < companies.size() + 1; i++) {
+    //display companies
+    text(companies.get(i-1).name, centX + ((centX * cellWidth) * i) + paddingLeft, (centY + cellHeight) + paddingTop);
 
-    stroke(companyColour[0]);
-    fill(companyColour[0]);
-    float x = map(i, 0, years.size(), border, width - border);
-    float y = map(value.google, 0, maximum(company[0]), height - border, border);
-
-    ellipse((float)x, y, sizeGoogle, sizeGoogle);
-
-    x = map(i, 0, years.size(), border, width - border);
-    y = map(value.apple, 0, maximum(company[0]), height - border, border);
-
-    stroke(companyColour[1]);
-    fill(companyColour[1]);
-    ellipse((float)x, y, sizeApple, sizeApple);
-
-    x = map(i, 0, years.size(), border, width - border);
-    y = map(value.microsoft, 0, maximum(company[0]), height - border, border);
-
-    stroke(companyColour[2]);
-    fill(companyColour[2]);
-    ellipse((float)x, y, sizeMicrosoft, sizeMicrosoft);
+    //display sum, average, max, std deviation and correlation in table
+    text((int)companies.get(i-1).sum(), centX + ((centX * cellWidth) * i) + paddingLeft, centY + ((centY * cellHeight) + paddingTop));
+    text(companies.get(i-1).average(), centX + ((centX * cellWidth) * i) + paddingLeft, ((centY + ((centY * cellHeight)) * 2) + paddingTop));
+    text((int)companies.get(i-1).maximum(), centX + ((centX * cellWidth) * i) + paddingLeft, ((centY + ((centY * cellHeight)) * 3) + paddingTop));
+    text(companies.get(i-1).standardDev(), centX + ((centX * cellWidth) * i) + paddingLeft, ((centY + ((centY * cellHeight)) * 4) + paddingTop));
+    text(companies.get(i-1).correlation(), centX + ((centX * cellWidth) * i) + paddingLeft, ((centY + ((centY * cellHeight)) * 5) + paddingTop));
   }
 }
 
 void drawBarChart()
 {
-  float horizontalWindowSize = width - (border / 3);
-  //float verticalWindowSize = height - (border / 2);
-  float sizeInterval = horizontalWindowSize / (float)years.size();
-  float sizeEachBar = sizeInterval / 3;
+  float barWidth = 15;
+  float offset = 3; // gap between each bar
+  float r = 10; //setting radius on top
 
-  for (int i = 0; i < years.size (); i++)
+  for (int i = 0; i < google.data.size(); i ++)
   {
-    Year value = years.get(i);
-    fill(255);
-    float x = border + (sizeInterval * i);
-    float y = x;
-    float barWidth = sizeEachBar;
-    float barHeight = map(value.google, 0, maximum(company[0]), height - border, border);
-    rect((float)x, y, barWidth, barHeight);
+    for (int j = 0; j < companies.size(); j++) 
+    {
+      Company company = companies.get(j);
+      //maps colour of company to value.
+      float col = map(company.data.get(i), 0, google.maximum(), 255, 100);
+
+      //checks company instance name and uses stroke and fill according to which one is selected 
+      if (company.name.equals("Google")) {      
+        stroke(255);
+        fill(0, col, col);
+      } else if (company.name.equals("Apple")) {
+        stroke(255);
+        fill(col, col, col);
+      } else if (company.name.equals("Microsoft")) {
+        stroke(255);
+        fill(col, 0, 0);
+      }
+
+      float x = map(i, 0, google.data.size(), border, width - (border));
+      float y = map(companies.get(j).data.get(i), 0, google.maximum(), border, height - (border* 2));
+      rect((float)x + ((barWidth + offset) * j), height - border, (float)barWidth, -y, r, r, 0, 0);
+    }
   }
 }
 
-void redLine(int x)
+
+
+void drawLineAndFigures(int x)
 {
+  //draws vertical line at position mouseX on Line Graph. Sticks to left or right border if mouse is not within graph range 
   if (x > border && x < width - (border * 2)) 
   {
-
     line(x, border, x, height - border);
   } else if (x > width - (border * 2)) {
 
-    line(width - (border*2), border, width - (border*2), height - border);
+    line(width - (border * 2), border, width - (border*2), height - border);
   } else if (x < border) {
 
     line(border, border, border, height - border);
+  }
+
+  float textX = width - (border * 2);
+  float y = border;
+  //only executes if x is within borders of graph
+  if (x > border && x < width - (border * 2)) {
+    //num maps passed in mouseX value and maps to integer index in data array range
+    int num = (int)map(x, border, width - border, 0, google.data.size());
+
+    if (x >= border && x <= width - (border * 2)) {
+      for (int i = 0; i < companies.size(); i++) {
+        stroke(companies.get(i).colour);
+        fill(companies.get(i).colour);
+        text(companies.get(i).name + ": " + companies.get(i).data.get(num), textX, y + (30 * i));
+      }
+    }
+    //returns first data values of each instance if x is less than left border
+    else if (x < border) { 
+      for (int i = 0; i < companies.size(); i++) {
+        stroke(companies.get(i).colour);
+        fill(companies.get(i).colour);
+        text(companies.get(i).name + ": " + companies.get(i).data.get(0), textX, y + (30 * i));
+      }
+    } 
+    //returns last data values of each instance if x is less than right border
+    else if (x > border - (width * 2)) {
+
+      for (int i = 0; i < companies.size(); i++) {
+        stroke(companies.get(i).colour);
+        fill(companies.get(i).colour);
+        text(companies.get(i).name + ": " + companies.get(i).data.get(google.data.size() -1 ), textX, y + (30 * i));
+      }
+    }
+  }
+}
+
+void controlEvent(ControlEvent theEvent)
+{
+
+  if (theEvent.getName().equals("Line Graph")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    dnSlider.hide();
+    bar.hide();
+    lines.show();
+    averages.show();
+    lineG = true;
+    scatG = false;
+    doughG = false;
+    coxG = false;
+    barG = false;
+  }
+  
+  if (theEvent.getName().equals("Values")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    bar.hide();
+    dnSlider.hide();
+    doughnut.hide();
+    lines.show();
+    averages.show();
+    drawLine = true;
+    drawAvg = false;
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    coxG = false;
+    barG = false;
+  }
+  
+  if (theEvent.getName().equals("Averages")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    bar.hide();
+    dnSlider.hide();
+    doughnut.hide();
+    lines.show();
+    averages.show();
+    drawLine = false;
+    drawAvg = true;
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    coxG = false;
+    barG = false;
+  }
+    
+
+  if (theEvent.getName().equals("Scatter Graph")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    bar.hide();
+    dnSlider.hide();
+    doughnut.hide();
+    lines.hide();
+    averages.hide();
+
+    lineG = false;
+    scatG = true;
+    doughG = false;
+    coxG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Doughnut Chart")) {       
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    dnSlider.show();
+    bar.hide();
+    lines.hide();
+    averages.hide();
+
+    lineG = false;
+    scatG = false;
+    doughG = true;
+    coxG = false;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Coxcomb Graph")) {
+
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    bar.hide();
+    dnSlider.hide();
+    lines.hide();
+    averages.hide();
+
+
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    coxG = true;
+    barG = false;
+  }
+
+  if (theEvent.getName().equals("Back")) {
+    background(0);
+    lineG = false;
+    scatG = false;
+    doughG = false;
+    coxG = false;
+    barG = false;
+    back.hide();
+    dnSlider.hide();
+    lines.hide();
+    averages.hide();
+    line.show();
+    scatter.show();
+    coxComb.show();
+    doughnut.show();
+    bar.show();
+  }
+
+  if (theEvent.getName().equals("Bar Chart")) {
+    back.show();
+    line.hide();
+    scatter.hide();
+    coxComb.hide();
+    doughnut.hide();
+    bar.hide();
+    lines.hide();
+    averages.hide();
+
+    lineG = false;
+    scatG = true;
+    doughG = false;
+    coxG = false;
+    barG = true;
+  }
+}
+
+void scatterGraph()
+{
+  for (int i = 0; i < google.data.size(); i ++)
+  {
+
+    float size = 100;
+    float x, y;
+    int count = 0; //used for rotating semi circle. If it is 1 then rotate in the loop.
+    float[] sizeComp = new float[3];
+    float[] values = new float[3];
+
+    for (int j = 0; j < companies.size(); j++) {
+
+      sizeComp[j] = map(companies.get(j).data.get(i), 0, google.maximum(), 0, size);
+      values[j] = companies.get(j).data.get(i);
+    }
+
+    //if Google and Apple values are the same at same year, draw semi circle for both values
+    if (google.data.get(i) == apple.data.get(i)) {
+
+      //draws semicircles
+      for (int p = 0; p < 2; p ++) {
+        stroke(companies.get(p).colour);
+        fill(companies.get(p).colour);
+
+        pushMatrix();
+        //maps x and y coordinates to the Scatter Graph to each element
+        x = map(i, 0, google.data.size(), border, width - border);
+        y = map(values[p], 0, google.maximum(), height - border, border);
+        translate(x, y);
+
+        //Only rotates semi-circle every two iterations
+        if (count == 1) {
+          rotate(-PI);
+        }      
+
+        arc((float)0, 0, sizeComp[p], sizeComp[p], 0, PI);
+        popMatrix();
+
+        count++;
+      }
+
+      //draws remaining point
+      x = map(i, 0, google.data.size(), border, width - border);
+      y = map(microsoft.data.get(i), 0, google.maximum(), height - border, border);
+      stroke(microsoft.colour);
+      fill(microsoft.colour);
+      ellipse((float)x, y, sizeComp[2], sizeComp[2]);
+    } 
+    //if Google and Microsoft values are the same at same year, draw semi circle for both values
+    else if (google.data.get(i) == microsoft.data.get(i)) {
+
+      for (int p = 0; p < 3; p += 2) {
+        stroke(companies.get(p).colour);
+        fill(companies.get(p).colour);
+        pushMatrix();
+        x = map(i, 0, google.data.size(), border, width - border);
+        y = map(values[p], 0, google.maximum(), height - border, border);
+        translate(x, y);
+
+        if (count == 1) {
+          rotate(-PI);
+        }
+
+        arc((float)0, 0, sizeComp[p], sizeComp[p], 0, PI);
+        popMatrix();
+        count++;
+      }
+
+      //draws remaining point
+      x = map(i, 0, google.data.size(), border, width - border);
+      y = map(apple.data.get(i), 0, google.maximum(), height - border, border);
+      stroke(apple.colour);
+      fill(apple.colour);
+      ellipse((float)x, y, sizeComp[1], sizeComp[1]);
+    } else if (apple.data.get(i) == microsoft.data.get(i)) {
+
+      for (int p = 1; p < 3; p ++) {
+        stroke(companies.get(p).colour);
+        fill(companies.get(p).colour);
+        pushMatrix();
+        x = map(i, 0, google.data.size(), border, width - border);
+        y = map(values[p], 0, google.maximum(), height - border, border);
+        translate(x, y);
+        if (count == 1) {
+          rotate(-PI);
+        }  
+        arc((float)0, 0, sizeComp[p], sizeComp[p], 0, PI);
+        popMatrix();
+        count++;
+      }
+      //draws remaining point
+      x = map(i, 0, google.data.size(), border, width - border);
+      y = map(google.data.get(i), 0, google.maximum(), height - border, border);
+      stroke(google.colour);
+      fill(google.colour);
+      ellipse((float)x, y, sizeComp[0], sizeComp[0]);
+    }
+    //or normally draw points at three points
+    else {
+      y = 0;
+      for (int k = 0; k < companies.size(); k++) {
+        x = map(i, 0, google.data.size(), border, width - border);
+        y = map(values[k], 0, google.maximum(), height - border, border);
+        stroke(companies.get(k).colour);
+        fill(companies.get(k).colour);
+        ellipse((float)x, y, sizeComp[k], sizeComp[k]);
+      }
+    }
   }
 }
 
 void drawTotalPieChart()
 {
-  int[] total = new int[3]; 
   float newX, newY;
-  float highestTotal = 0;
+  newX = centX;
+  newY = centY;
+  //get mouse coordinates in relation to centre of circle
+  float toMouseX = mouseX - centX;
+  float toMouseY = mouseY - centY;
+  float angle = atan2(toMouseY, toMouseX);
+  float thetaPrev = 0;
 
-  newX = width * 0.25f;
-  newY = height * 0.5f;
-
-  total[0] = sum(company[0]);
-  total[1] = sum(company[1]);
-  total[2] = sum(company[2]);
-
-  for (int i = 0; i < total.length; i ++)
+  //mapping negative angle into positive
+  if (angle < 0)
   {
-    if (total[i] > highestTotal) {
-      highestTotal = total[i];
-    }
+    angle = map(angle, -PI, 0, PI, TWO_PI);
   }
 
+  float totalOfThree = 0;
 
-  float sum = sum(company[0]) + sum(company[1]) + sum(company[2]);
-  float thetaPrev = 0;
-  float totalThree = total[0] + total[1] + total[2];
-
-  for (int i = 0; i < total.length; i ++)
+  //adding all sums of companies to sum 
+  for (int i = 0; i < companies.size(); i ++)
   {
+    totalOfThree += companies.get(i).sum();
+  }
 
-    float mapX = map(total[i], 0, highestTotal, 0, centX);
-    float mapY = map(total[i], 0, highestTotal, 0, centY); 
-    fill(companyColour[i]);
-    stroke(companyColour[i]);
+  for (int i = 0; i < companies.size(); i ++)
+  {
+    Company select = companies.get(i);
+    float mapX = map(select.sum(), 0, google.sum(), 0, centX);
+    float mapY = map(select.sum(), 0, google.sum(), 0, centY);
 
-    float theta = map(total[i], 0, sum, 0, TWO_PI);
-    textAlign(CENTER);
-    textSize(15);
+    float theta = map(select.sum(), 0, totalOfThree, 0, TWO_PI);
+    textAlign(CENTER);   
     float thetaNext = thetaPrev + theta;
-    float radius = newX * 0.6f;
-    //float radius = centX * 2.0f;
+    float radius = newX * 0.6f;  
     float x = newX + sin(thetaPrev + (theta * 0.5f) + HALF_PI) * radius;      
     float y = newY - cos(thetaPrev + (theta * 0.5f) + HALF_PI) * radius;
+    if (angle > thetaPrev && angle < thetaNext) {
+      mapX = centX * 1.1f;
+      mapY = centY * 1.1f;
+
+      //if statements to scale out text values in coxcomb graph whenever mouse is within boundaries
+      if (angle > 0 && angle < 3) {
+        x *= 1.1f;
+        y *= 1.1f;
+      }
+      if (angle > 3 && angle < 4) {
+        x *= 0.9f;
+        y *= 0.9f;
+      }
+      if (angle > 4) {
+        x *= 1.1f;
+        y *= 0.9f;
+      }
+    }
     fill(255);
-    textSize(11);
-    text(company[i] + ": " + (int)map(total[i], 0, sum, 0, 100) + "%", x, y);             
-    stroke(companyColour[i]);
-    fill(companyColour[i]);               
-    arc(newX, newY, mapX, mapY, thetaPrev, thetaNext);
+    text(select.name + ": " + (int)map(select.sum(), 0, totalOfThree, 0, 100) + "%", x, y);
+
+    stroke(select.colour);
+    fill(select.colour); 
+    arc(centX, centY, mapX, mapY, thetaPrev, thetaNext);
     thetaPrev = thetaNext;
-  }
-}
-
-void drawCircle(int x)
-{
-  float textX = width - (border * 2);
-  float y = border;
-  //only executes if x is within borders of graph
-  if (x > border && x < width - (border * 2)) {
-    int num = (int)map(x, border, width - border, 0, years.size());
-    float mapX = map(x, 0, years.size(), border, height - border);
-
-    Year year = years.get(num);
-
-    float googleY = map(year.google, 0, maxValueOfThree(), height - border, border);
-    float appleY = map(year.apple, 0, maxValueOfThree(), height - border, border);
-    float microsoftY = map(year.microsoft, 0, maxValueOfThree(), height - border, border);
-
-    stroke(companyColour[0]);
-    fill(companyColour[0]);
-    ellipse(mapX, googleY, 10, 10);
-
-    stroke(companyColour[1]);
-    fill(companyColour[1]);
-    ellipse(mapX, appleY, 10, 10);
-
-    stroke(companyColour[2]);
-    fill(companyColour[2]);
-    ellipse(mapX, microsoftY, 10, 10);
-
-    //PUT DISPLAY ON GRAPH SIDE
-    //printing year and GDP amount beside red circle
-    textAlign(LEFT, LEFT);
-    textSize(15);
-
-
-    if (x >= border && x <= width - (border * 2)) {
-      fill(companyColour[0]);
-      text("Google: " + year.google, textX, y);
-      fill(companyColour[1]);
-      text("Apple: " + year.apple, textX, y + 30);
-      fill(companyColour[2]);
-      text("Microsoft: " + year.microsoft, textX, y + 60);
-    } else if (x < border) {      
-      fill(companyColour[0]);
-      text("Google: " + years.get(0).google, textX, y);
-      fill(companyColour[1]);
-      text("Apple: " + years.get(0).apple, textX, y + 30);
-      fill(companyColour[2]);
-      text("Microsoft: " + years.get(0).microsoft, textX, y + 60);
-    } else if (x > border - (width * 2)) {
-      fill(companyColour[0]);
-      text("Google: " + years.get(years.size() - 1).google, textX, y);
-      fill(companyColour[1]);
-      text("Apple: " + years.get(years.size() - 1).apple, textX, y + 30);
-      fill(companyColour[2]);
-      text("Microsoft: " + years.get(years.size() - 1).microsoft, textX, y + 60);
-    }
-  }
-}
-
-//possibility to use a button, slider or some shit to go through the years. 
-
-void drawPieChart(String comp)
-{
-  float thetaPrev = 0;
-  float size = 170;
-  float sum = 0;
-  float max = 0;
-  float theta = 0;
-  float col = 0;
-    if (comp.equals(company[0])) {
-    sum = sum(company[0]);
-    max = maximum(company[0]);
-  }
-  if (comp.equals(company[1])) {
-    sum = sum(company[1]);
-    max = maximum(company[1]);
-  }  
-  if (comp.equals(company[2])) {
-    sum = sum(company[2]);
-    max = maximum(company[2]);
-  } 
-
-  for (int i = 0; i < years.size (); i ++)
-  {
-    Year year = years.get(i);
-    fill(year.c);
-    stroke(year.c);
-    if (comp.equals(company[0])) {
-      theta = map(year.google, 0, sum, 0, TWO_PI);
-    }
-    if (comp.equals(company[1])) {
-      theta = map(year.apple, 0, sum, 0, TWO_PI);
-    }  
-    if (comp.equals(company[2])) {
-      theta = map(year.microsoft, 0, sum, 0, TWO_PI);
-    }
-
-    textAlign(CENTER);
-
-    if (comp.equals(company[0])) {
-      col = map(year.google, 0, max, 255, 100);
-    }
-    if (comp.equals(company[1])) {
-      col = map(year.apple, 0, max, 255, 100);
-    }  
-    if (comp.equals(company[2])) {
-      col = map(year.microsoft, 0, max, 255, 100);
-    }
-
-    float thetaNext = thetaPrev + theta;
-    float radius = centX * 0.55f;
-    //float radius = centX * 2.0f;
-    float x = ((centX) + sin(thetaPrev + (theta * 0.5f) + HALF_PI) * radius);      
-    float y = ((centY) - cos(thetaPrev + (theta * 0.5f) + HALF_PI) * radius);
-    fill(255);
-    textSize(12);
-    if (comp.equals(company[0])) {
-      text(year.y + ": " + (int)map(year.google, 0, sum(company[0]), 0, 100) + "%", x, y);
-    }
-    if (comp.equals(company[1])) {
-      text(year.y + ": " + (int)map(year.apple, 0, sum(company[1]), 0, 100) + "%", x, y);
-    }  
-    if (comp.equals(company[2])) {
-      text(year.y + ": " + (int)map(year.microsoft, 0, sum(company[2]), 0, 100) + "%", x, y);
-    }
-
-    stroke(0, col, col);
-    fill(0, col, col);               
-    arc(centX, centY, centX * 0.8, centY * 0.8f, thetaPrev, thetaNext);
-    thetaPrev = thetaNext;
-
-    stroke(255);
-    fill(0);
-    ellipse(centX, centY, size, size);
   }
 }
 
 void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRange, float border)
 {
+  textSize(12);
   stroke(200, 200, 200);
   fill(200, 200, 200);
 
-  int fromLast = 50;
-  int offset = 5;
-
   // Draw the horizontal axis
-  stroke(256, 0, 0);
+  stroke(255, 0, 0);
   line(border, height - border, width - (border * 2), height - border);
 
   float horizontalWindowRange = (width - (border * 2.0f));
-  float horizontalDataGap = years.size() / horizontalIntervals;
+  float horizontalDataGap = google.data.size() / horizontalIntervals;
   float horizontalWindowGap = horizontalWindowRange / horizontalIntervals;
   float tickSize = border * 0.1f;
 
-  float firstYear = years.get(0).y;
+  float firstYear = google.year.get(0);
 
   // Draw the ticks
   for (int i = 0; i < horizontalIntervals; i ++)
@@ -395,15 +611,13 @@ void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRang
 
     float x = border + (i * horizontalWindowGap);
     line(x, height - (border - tickSize), x, (height - border));
-    //float textY = height - (border * 0.5f);
   }
 
   for (int i = 0; i < horizontalIntervals; i += 2) {
     float x = border + (i * horizontalWindowGap);
     float textY = height - (border * 0.5f);
-    // Print the date
+    // Print every two years
     textAlign(CENTER, CENTER);
-    textSize(12);
     text((int)(firstYear + i * horizontalDataGap), x, textY);
   }
 
@@ -411,148 +625,20 @@ void drawAxis(int horizontalIntervals, int verticalIntervals, float vertDataRang
   line(border, border, border, height - border);
 
   float verticalDataGap = vertDataRange / verticalIntervals;
-  float verticalWindowRange = height - (border * 2.0f);
+  float verticalWindowRange = height - (border * 2 );
   float verticalWindowGap = verticalWindowRange / verticalIntervals;
 
   for (int i = 0; i <= verticalIntervals; i ++)
   {
+    //draw vertical ticks
     float y = (height - border) - (i * verticalWindowGap);
     line(border - tickSize, y, border, y);
     float hAxisLabel = verticalDataGap * i;
 
     textAlign(RIGHT, CENTER);
-
-    text((int)hAxisLabel, border - (tickSize * 2.0f), y);
+    text(round(hAxisLabel), border - (tickSize * 2.0f), y);
   }
-}
-
-void drawTrendGraph(String comp, float border, float maxValue) {
-  float y1 = 0;
-  float y2 = 0;
-  for (int i = 1; i < years.size (); i ++)
-  {
-    stroke(0, 0, 255);
-    fill(0, 0, 255);
-    Year value = years.get(i);
-    Year minusValue = years.get(i-1);
-    float x1 = map(i-1, 0, years.size(), border, width - border);
-    float x2 = map(i, 0, years.size(), border, width - border);
-
-    if (comp.equals(company[0])) {
-      stroke(companyColour[0]);
-      fill(companyColour[0]);
-      y1 = map(minusValue.google, 0, maxValue, height - border, border);
-      y2 = map(value.google, 0, maxValue, height - border, border);
-    }
-    if (comp.equals(company[1])) {
-      stroke(companyColour[1]);
-      fill(companyColour[1]);
-      y1 = map(minusValue.apple, 0, maxValue, height - border, border);
-      y2 = map(value.apple, 0, maxValue, height - border, border);
-    }  
-    if (comp.equals(company[2])) {
-      stroke(companyColour[2]);
-      fill(companyColour[2]);
-      y1 = map(minusValue.microsoft, 0, maxValue, height - border, border);
-      y2 = map(value.microsoft, 0, maxValue, height - border, border);
-    }
-
-    line((float)x1, y1, (float)x2, y2);
-
-  }
-}
-
-
-int maxValueOfThree() {
-
-  int[] arr = new int[3];
-  int max = 0;
-
-  arr[0] = maximum(company[0]);
-  arr[1] = maximum(company[1]);
-  arr[2] = maximum(company[2]);
-
-  for (int i = 0; i < arr.length; i++) {
-
-    if (arr[i] > max) {
-
-      max = arr[i];
-    }
-  }
-
-  return max;
-}
-
-//APPLE MAX, MIN, ETC FUNCTIONS
-int sum(String comp)
-{
-  int sum = 0;
-
-  for (int i = 0; i < years.size (); i++) {
-
-    Year select = years.get(i);
-
-    if (comp.equals(company[0])) {
-      sum += select.google;
-    }
-    if (comp.equals(company[1])) {
-      sum += select.apple;
-    }
-    if (comp.equals(company[2])) {
-      sum += select.microsoft;
-    }
-  }
-
-  return sum;
-}
-
-float average(String comp) {
-
-  int total = 0;
-
-  if (comp.equals(company[0])) {
-    total = sum(company[0]);
-  }
-  if (comp.equals(company[1])) {
-    total = sum(company[1]);
-  }
-  if (comp.equals(company[2])) {
-    total = sum(company[2]);
-  }
-
-  float avg = total / years.size();
-
-  return avg;
-}
-
-int maximum(String comp) {
-
-  int max = 0;
-
-  for (int i = 0; i < years.size (); i++) {
-    Year n = years.get(i);
-
-    if (comp.equals(company[0])) {
-      if (n.google > max) {
-
-        max = n.google;
-      }
-    }
-    if (comp.equals(company[1])) {
-      if (n.apple > max) {
-
-        max = n.apple;
-      }
-    }
-    if (comp.equals(company[2])) {
-      if (n.microsoft > max) {
-
-        max = n.microsoft;
-      }
-    }
-  }
-
-  return max;
+  textSize(15);
 }
 
 void loadData() {
@@ -561,17 +647,16 @@ void loadData() {
 
   for (int i = 0; i < lines.length; i++)
   {
-    Year year = new Year(lines[i]);
-    years.add(year);
+    String[] elements = lines[i].split("\t");
+
+    //add year column to year field of each instance
+    google.year.add(Integer.parseInt(elements[0]));
+    apple.year.add(Integer.parseInt(elements[0]));
+    microsoft.year.add(Integer.parseInt(elements[0]));
+
+    //append corresponding value column to data array of each instance
+    google.data.add(Integer.parseInt(elements[1]));
+    apple.data.add(Integer.parseInt(elements[2]));    
+    microsoft.data.add(Integer.parseInt(elements[3]));
   }
 }
-
-void displayFigures() {
-
-  for (int i = 0; i < years.size (); i++) {
-
-    Year select  = years.get(i);
-    select.display();
-  }
-}
-
